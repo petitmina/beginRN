@@ -1,6 +1,14 @@
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
-import { Button, StyleSheet, Text, TextInput, View, ScrollView } from "react-native";
+import {
+  Button,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
 
 export default function App() {
   const [inputValue, setInputValue] = useState("");
@@ -16,10 +24,18 @@ export default function App() {
   };
 
   const handleInputSubmit = () => {
-    if (inputValue !== '') {
+    if (inputValue !== "") {
       setSubmittedValue([...submittedValue, inputValue]);
-      setInputValue('');
+      setInputValue("");
     }
+  };
+
+  const removeTodo = (index) => {
+    setSubmittedValue((prevSubmittedValue) => {
+      const updatedValues = [...prevSubmittedValue];
+      updatedValues.splice(index, 1);
+      return updatedValues;
+    });
   };
 
   return (
@@ -38,9 +54,14 @@ export default function App() {
         )} */}
         <ScrollView style={styles.scrollView}>
           {submittedValue.map((value, index) => (
-            <Text key={index} style={styles.submittedText}>
-              {value}
-            </Text>
+            <View key={index} style={styles.submittedItem}>
+              <View style={styles.submittedTextContainer}>
+                <Text style={styles.submittedText}>{value}</Text>
+              </View>
+              <TouchableOpacity onPress={() => removeTodo(index)}>
+                <Text style={styles.deleteButton}>X</Text>
+              </TouchableOpacity>
+            </View>
           ))}
         </ScrollView>
       </View>
@@ -75,12 +96,26 @@ const styles = StyleSheet.create({
     marginTop: 10, // 위쪽 여백 추가
     width: "100%", // 가로 너비 100%
   },
-  submittedText: {
+  submittedItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginVertical: 5,
     textAlign: "center",
     marginVertical: 5, // 텍스트 아이템 간의 세로 간격 조절
-    borderColor: 'yellow',
+    borderColor: "yellow",
     borderWidth: 5,
     borderRadius: 5,
     padding: 5,
+
+  },
+  submittedTextContainer: {
+    flex: 1, // View 컴포넌트가 남은 공간을 모두 차지하도록 설정
+  },
+  submittedText: {
+    textAlign: "center",
+  },
+  deleteButton: {
+    color: "red",
   },
 });
