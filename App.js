@@ -8,6 +8,7 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
+  CheckBox,
 } from "react-native";
 
 export default function App() {
@@ -19,13 +20,13 @@ export default function App() {
   };
 
   const handleButtonPress = () => {
-    setSubmittedValue([...submittedValue, inputValue]);
+    setSubmittedValue([...submittedValue, { value: inputValue, checked: false }]);
     setInputValue("");
   };
 
   const handleInputSubmit = () => {
     if (inputValue !== "") {
-      setSubmittedValue([...submittedValue, inputValue]);
+      setSubmittedValue([...submittedValue, { value: inputValue, checked: false }]);
       setInputValue("");
     }
   };
@@ -38,6 +39,15 @@ export default function App() {
     });
   };
 
+  const handleCheckBoxToggle = (index) => {
+    setSubmittedValue((prevSubmittedValue) => {
+      const updatedValues = [...prevSubmittedValue];
+      updatedValues[index].checked = !updatedValues[index].checked;
+      return updatedValues;
+    });
+  };
+
+
   return (
     <View style={styles.container}>
       <View>
@@ -49,11 +59,25 @@ export default function App() {
           onSubmitEditing={handleInputSubmit}
         />
         <Button style={styles.btn} title="submit" onPress={handleButtonPress} />
-        {/* {submittedValue !== "" && (
-          <Text style={styles.subText}></Text>
-        )} */}
         <ScrollView style={styles.scrollView}>
-          {submittedValue.map((value, index) => (
+          {submittedValue.map((item, index) => (
+            <View key={index} style={styles.submittedItem}>
+              <CheckBox
+                value={item.checked}
+                onValueChange={() => handleCheckBoxToggle(index)}
+              />
+              <View style={styles.submittedTextContainer}>
+                <Text style={styles.submittedText}>{item.value}</Text>
+              </View>
+              <Text
+                style={styles.deleteButton}
+                onPress={() => removeTodo(index)}
+              >
+                X
+              </Text>
+            </View>
+          ))}
+          {/* {submittedValue.map((value, index) => (
             <View key={index} style={styles.submittedItem}>
               <View style={styles.submittedTextContainer}>
                 <Text style={styles.submittedText}>{value}</Text>
@@ -62,7 +86,7 @@ export default function App() {
                 <Text style={styles.deleteButton}>X</Text>
               </TouchableOpacity>
             </View>
-          ))}
+          ))} */}
         </ScrollView>
       </View>
       <StatusBar style="auto" />
@@ -107,7 +131,6 @@ const styles = StyleSheet.create({
     borderWidth: 5,
     borderRadius: 5,
     padding: 5,
-
   },
   submittedTextContainer: {
     flex: 1, // View 컴포넌트가 남은 공간을 모두 차지하도록 설정
