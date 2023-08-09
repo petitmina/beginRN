@@ -37,7 +37,7 @@ export default function App() {
     const updatedToDos = [...toDos];
     const removedTodo = updatedToDos.splice(index, 1)[0];
     setToDos(updatedToDos);
-    await removeToDoFromStorage(removedTodo);
+    await removedToDoFromStorage(removedTodo);
   };
 
   const handleCheckBoxToggle = async (index) => {
@@ -86,6 +86,15 @@ export default function App() {
     } catch (error) {
       console.error("Error updating ToDo in storage:", error);
     }
+  };
+
+  const removeAllToDos = async () => {
+    try {
+      setToDos([]);
+      await AsyncStorage.removeItem("todos");
+    } catch (error) {
+      console.error("Error removing all ToDos:", error);
+    }
   }
 
 
@@ -119,6 +128,7 @@ export default function App() {
             </View>
           ))}
         </ScrollView>
+        <Button style={styles.btn} title='전체 삭제' onPress={removeAllToDos}/>
       </View>
       <StatusBar style="auto" />
     </View>
