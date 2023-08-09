@@ -1,5 +1,6 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Button,
   StyleSheet,
@@ -12,40 +13,80 @@ import {
 } from "react-native";
 
 export default function App() {
-  const [inputValue, setInputValue] = useState("");
-  const [submittedValue, setSubmittedValue] = useState([]);
+  const [toDo, setToDo] = useState("");
+  const [toDos, setToDos] = useState([]);
+
+  useEffect(() => {
+    loadToDos();
+  }, []);
 
   const handleTextChange = (text) => {
-    setInputValue(text);
+    setToDo(text);
   };
 
   const handleButtonPress = () => {
-    setSubmittedValue([...submittedValue, { value: inputValue, checked: false }]);
-    setInputValue("");
-  };
-
-  const handleInputSubmit = () => {
-    if (inputValue !== "") {
-      setSubmittedValue([...submittedValue, { value: inputValue, checked: false }]);
-      setInputValue("");
+    if(toDos !== "") {
+      const newToDo = { value: toDo, checked: false};
+      setToDos([...toDos, newToDo]);
+      saveToDo(newToDo);
+      setToDo("");
     }
   };
 
-  const removeTodo = (index) => {
-    setSubmittedValue((prevSubmittedValue) => {
-      const updatedValues = [...prevSubmittedValue];
-      updatedValues.splice(index, 1);
-      return updatedValues;
-    });
+  const removeTodo = async (index) => {
+    const updatedToDos = [...toDos];
+    const removedTodo = updatedToDos.splice(index, 1)[0];
+    setToDos(updatedToDos);
+    await removeToDoFromStorage(removedTodo);
   };
 
-  const handleCheckBoxToggle = (index) => {
-    setSubmittedValue((prevSubmittedValue) => {
-      const updatedValues = [...prevSubmittedValue];
-      updatedValues[index].checked = !updatedValues[index].checked;
-      return updatedValues;
-    });
+  const handleCheckBoxToggle = async (index) => {
+    const updatedToDos = [...toDos];
+    updatedToDos[index].checked =!updatedToDos[index].checked;
+    setToDos(updatedToDos);
+    await updatedToDoInStorage(updatedToDos[index]);
   };
+
+  const saveToDo = async (todo) => {
+    try {
+      const savedToDos = [...toDos, todo];
+      await AsyncStorage.setItem("todos", JSON.stringify(savedToDos));
+    }catch (error) {
+      console.error("Error saving ToDo:", error);
+    }
+  };
+
+  const loadToDos = async () => {
+    try {
+      const todos = await AsyncStorage.getItem("todos");
+      if(todos !== null) {
+        setToDos(JSON.parse(todos));
+      }
+    } catch(error){
+      console.error("Error loading ToDos:", error);
+    }
+  };
+
+  const removedToDoFromStorage = async (todo) => {
+    try {
+      const todos = [...toDos];
+      const updatedToDos = todos.filter((item) => item.value !== todo.value);
+      await AsyncStorage.setItem("todos", JSON.stringify(updatedToDos));
+    } catch (error) {
+      console.error("Error removing ToDo from storage:", error);
+    }
+  };
+
+  const updatedToDoInStorage = async (todo) => {
+    try {
+      const todos = [...toDos];
+      const index = todos.findIndex((item) => item.value === todo.value);
+      todos[index] = todo;
+      await AsyncStorage.setItem("todos", JSON.stringify(todos));
+    } catch (error) {
+      console.error("Error updating ToDo in storage:", error);
+    }
+  }
 
 
   return (
@@ -55,12 +96,12 @@ export default function App() {
           style={styles.input}
           placeholder="아무거나 입력해주세요."
           onChangeText={handleTextChange}
-          value={inputValue}
-          onSubmitEditing={handleInputSubmit}
+          value={toDo}
+          onSubmitEditing={handleButtonPress}
         />
         <Button style={styles.btn} title="submit" onPress={handleButtonPress} />
         <ScrollView style={styles.scrollView}>
-          {submittedValue.map((item, index) => (
+          {toDos.map((item, index) => (
             <View key={index} style={styles.submittedItem}>
               <CheckBox
                 value={item.checked}
@@ -77,16 +118,6 @@ export default function App() {
               </Text>
             </View>
           ))}
-          {/* {submittedValue.map((value, index) => (
-            <View key={index} style={styles.submittedItem}>
-              <View style={styles.submittedTextContainer}>
-                <Text style={styles.submittedText}>{value}</Text>
-              </View>
-              <TouchableOpacity onPress={() => removeTodo(index)}>
-                <Text style={styles.deleteButton}>X</Text>
-              </TouchableOpacity>
-            </View>
-          ))} */}
         </ScrollView>
       </View>
       <StatusBar style="auto" />
